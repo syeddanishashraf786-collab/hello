@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Modern Recipe List</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: linear-gradient(to right, #f8cdda, #1d2b64); color: #333; margin:0; padding:20px; }
+    header { display: flex; justify-content: center; align-items: center; margin-bottom:20px; gap:20px; }
+    header img.logo { width:150px; height:150px; border-radius:20px; object-fit:cover; box-shadow:0 4px 10px rgba(0,0,0,0.3); }
+    #openUpload { padding:10px 20px; font-size:18px; border:none; border-radius:12px; cursor:pointer; background:#ff6347; color:white; box-shadow:0 4px 10px rgba(0,0,0,0.2); transition: transform 0.2s; }
+    #openUpload:hover { transform: translateY(-2px); box-shadow:0 6px 15px rgba(0,0,0,0.3); }
+    .filter-panel { display: flex; flex-direction: column; gap:15px; margin-bottom:20px; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding:20px; border-radius:20px; box-shadow:0 8px 30px rgba(0,0,0,0.2); }
+    .filter-row { display: flex; flex-wrap: wrap; justify-content:center; gap:15px; }
+    .filter-row select, #searchBar { padding:12px 15px; font-size:16px; border-radius:12px; border:none; outline:none; min-width:180px; box-shadow:0 2px 8px rgba(0,0,0,0.2); transition: transform 0.2s, box-shadow 0.2s; }
+    .filter-row select:focus, #searchBar:focus { transform: translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+    #searchBar { width:60%; max-width:500px; align-self:center; }
+    button#showFavorites, button#showAll { display:inline-block; margin:10px 5px; padding:10px 20px; font-size:16px; border-radius:12px; border:none; cursor:pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    button#showFavorites { background:#ff6347; color:#fff; }
+    button#showAll { background:#1d2b64; color:#fff; }
+    button#showFavorites:hover, button#showAll:hover { transform: translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.3); }
+    ul { padding:0; }
+    .recipe-item { list-style:none; margin:20px auto; padding:15px; border:1px solid #ccc; border-radius:15px; max-width:400px; background:#fff; box-shadow:0px 4px 12px rgba(0,0,0,0.2); transition: transform 0.3s, box-shadow 0.3s; position:relative;}
+    .recipe-item:hover { transform: scale(1.03); box-shadow:0px 6px 20px rgba(0,0,0,0.3);}
+    .recipe-item img { width:100%; border-radius:10px; }
+    .recipe-item h2 { color:#1d2b64; }
+    .recipe-item button { margin-top:10px; padding:8px 12px; background:#1d2b64; color:#fff; border:none; border-radius:6px; cursor:pointer; transition: background 0.3s;}
+    .recipe-item button:hover { background:#f8cdda; color:#000; }
+    .favorite { position:absolute; top:15px; right:15px; font-size:24px; cursor:pointer; }
+    .stars span { font-size:20px; cursor:pointer; margin-right:3px; }
+    .rating-count { font-size:14px; color:#555; margin-top:5px; }
+    .comments { margin-top:10px; }
+    .comments input { width:80%; padding:6px 8px; border-radius:6px; border:1px solid #ccc; margin-right:5px; }
+    .comments button { padding:6px 10px; border-radius:6px; border:none; background:#1d2b64; color:#fff; cursor:pointer; }
+    .comments button:hover { background:#ff6347; }
+    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); overflow:auto; }
+    .modal-content { background:#fff; margin:5% auto; padding:20px; border-radius:12px; max-width:600px; }
+    .modal-content h2 { color:#1d2b64; }
+    .close { float:right; font-size:24px; cursor:pointer; }
+    .upload-recipe input, .upload-recipe textarea, .upload-recipe button { width:100%; margin:5px 0; padding:10px; border-radius:8px; border:none; }
+    .upload-recipe button { background:#1d2b64; color:white; cursor:pointer; transition: background 0.3s; }
+    .upload-recipe button:hover { background:#ff6347; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="img1d.jpg" alt="Website Logo" class="logo">
+    <button id="openUpload">+ Upload</button>
+  </header>
+
+  <div class="filter-panel">
+    <div class="filter-row">
+      <select id="typeSelect">
+        <option value="All">All</option>
+        <option value="Veg">Veg</option>
+        <option value="Non-Veg">Non-Veg</option>
+      </select>
+      <select id="countrySelect"><option value="">Select Country</option></select>
+      <select id="stateSelect"><option value="">Select State</option></select>
+      <select id="districtSelect"><option value="">Select District</option></select>
+      <select id="languageSelect">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+      </select>
+    </div>
+    <input type="text" id="searchBar" list="recipeOptions" placeholder="Search recipes...">
+  </div>
+
+  <button id="showFavorites">Show Favorites</button>
+  <button id="showAll">Show All Recipes</button>
+
+  <!-- Upload Recipe Modal -->
+  <div id="uploadModal" class="modal">
+    <div class="modal-content upload-recipe">
+      <span class="close">&times;</span>
+      <h2 style="text-align:center; color:#1d2b64;">Upload Your Recipe</h2>
+      <img src="img1d.jpg" style="width:120px; display:block; margin:10px auto; border-radius:20px; box-shadow:0 4px 10px rgba(0,0,0,0.3);" />
+      <input type="text" id="newTitle" placeholder="Recipe Title">
+      <input type="text" id="newType" placeholder="Type (Veg/Non-Veg)">
+      <input type="text" id="newCountry" placeholder="Country">
+      <input type="text" id="newState" placeholder="State">
+      <input type="text" id="newDistrict" placeholder="District">
+      <input type="text" id="newImage" placeholder="Image URL">
+      <textarea id="newIngredients" placeholder="Ingredients (comma separated)"></textarea>
+      <textarea id="newInstructions" placeholder="Instructions (comma separated)"></textarea>
+      <button onclick="addUserRecipe()">Upload Recipe</button>
+    </div>
+  </div>
+
+  <ul id="recipe-list"></ul>
+  <datalist id="recipeOptions"></datalist>
+
+  <script>
+    // Your existing recipe JS code here
+    const defaultRecipes = [
+      { title:"Chicken Curry", type:"Non-Veg", location:{country:"India",state:"Maharashtra",district:"Pune"}, image:"https://www.foodandwine.com/thmb/8YAIANQTZnGpVWj2XgY0dYH1V4I=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/spicy-chicken-curry.jpg", extendedIngredients:["1 lb chicken","2 onions","2 tomatoes","2 tbsp curry powder","1 cup coconut milk","Salt"], instructions:["Heat oil, sauté onions.","Add spices & tomato.","Add chicken, cook 10 min.","Add coconut milk, simmer.","Serve hot."] },
+      { title:"Vegetable Biryani", type:"Veg", location:{country:"India",state:"West Bengal",district:"Kolkata"}, image:"https://recipesofhome.com/wp-content/uploads/2020/06/veg-biryani-recipe.jpg", extendedIngredients:["1 cup rice","Mixed vegetables","Yogurt","Biryani masala"], instructions:["Soak rice & boil.","Cook veggies with masala.","Layer rice & veggies.","Cook on low flame.","Serve with raita."] },
+      { title:"Pasta Alfredo", type:"Veg", location:{country:"Italy",state:"Lazio",district:"Rome"}, image:"https://www.allrecipes.com/thmb/alfredo-pasta.jpg", extendedIngredients:["200g pasta","1 cup milk","2 tbsp parmesan","Butter","Salt & pepper"], instructions:["Boil pasta.","Make sauce with milk & cheese.","Mix pasta in sauce.","Serve hot."] }
+    ];
+
+    let recipes = JSON.parse(localStorage.getItem("userRecipes")) || [];
+    recipes = defaultRecipes.concat(recipes);
+
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    let ratings = JSON.parse(localStorage.getItem("ratings")) || {};
+    let ratingCounts = JSON.parse(localStorage.getItem("ratingCounts")) || {};
+    let comments = JSON.parse(localStorage.getItem("comments")) || {};
+
+    const countrySelect=document.getElementById("countrySelect");
+    const stateSelect=document.getElementById("stateSelect");
+    const districtSelect=document.getElementById("districtSelect");
+    const typeSelect=document.getElementById("typeSelect");
+    const searchBar=document.getElementById("searchBar");
+    const recipeList=document.getElementById("recipe-list");
+    const languageSelect=document.getElementById("languageSelect");
+
+    function populateCountries(){
+      countrySelect.innerHTML="<option value=''>Select Country</option>";
+      [...new Set(recipes.map(r=>r.location.country))].forEach(c=>{
+        const o=document.createElement("option"); o.value=c;o.textContent=c;countrySelect.appendChild(o);
+      });
+    }
+    populateCountries();
+
+    [countrySelect,stateSelect,districtSelect,typeSelect,searchBar,languageSelect].forEach(el=>el.addEventListener("change",filterRecipes));
+    searchBar.addEventListener("input",filterRecipes);
+    countrySelect.addEventListener("change",()=>{ 
+      stateSelect.innerHTML="<option value=''>Select State</option>"; 
+      districtSelect.innerHTML="<option value=''>Select District</option>";
+      if(!countrySelect.value)return;
+      [...new Set(recipes.filter(r=>r.location.country===countrySelect.value).map(r=>r.location.state))].forEach(s=>{
+        const o=document.createElement("option"); o.value=s;o.textContent=s;stateSelect.appendChild(o);
+      });
+      filterRecipes();
+    });
+    stateSelect.addEventListener("change",()=>{ 
+      districtSelect.innerHTML="<option value=''>Select District</option>";
+      if(!stateSelect.value)return;
+      [...new Set(recipes.filter(r=>r.location.state===stateSelect.value).map(r=>r.location.district))].forEach(d=>{
+        const o=document.createElement("option"); o.value=d;o.textContent=d;districtSelect.appendChild(o);
+      });
+      filterRecipes();
+    });
+
+    function displayRecipes(list){ recipeList.innerHTML=""; if(list.length===0){ recipeList.innerHTML="<p style='text-align:center; color:#fff; font-size:18px;'>No recipes found!</p>"; return; } const lang = languageSelect.value; list.forEach((r,i)=>{ const li=document.createElement("li"); li.className="recipe-item"; const ingredientsLabel = (lang=="hi") ? "सामग्री:" : "Ingredients:"; const viewLabel = (lang=="hi") ? "पूरा व्यंजन देखें" : "View Full Recipe"; li.innerHTML=`<img src="${r.image}"><h2>${r.title}</h2><p><strong>${ingredientsLabel}</strong> ${r.extendedIngredients.join(", ")}</p><button onclick="showRecipe(${i})">${viewLabel}</button>`; const fav=document.createElement("span"); fav.className="favorite"; fav.innerHTML=favorites.includes(r.title)?"❤️":"🤍"; fav.addEventListener("click",()=>toggleFavorite(r.title,fav)); li.appendChild(fav); const stars=document.createElement("div"); stars.className="stars"; li.appendChild(stars); addRating(stars,r.title); const count = document.createElement("div"); count.className="rating-count"; count.innerText=`Rated by: ${ratingCounts[r.title]||0} users`; li.appendChild(count); const commentDiv = document.createElement("div"); commentDiv.className="comments"; commentDiv.innerHTML = `<h4>${lang=="hi"?"टिप्पणियाँ":"Comments"}:</h4><ul id="commentList${i}">${(comments[r.title]||[]).map(c=>`<li>${c}</li>`).join("")}</ul><input type="text" id="commentInput${i}" placeholder="${lang=="hi"?"अपनी टिप्पणी लिखें":"Write a comment"}"><button onclick="addComment(${i})">${lang=="hi"?"जोड़ें":"Add"}</button>`; li.appendChild(commentDiv); recipeList.appendChild(li); }); }
+
+    function toggleFavorite(title,favIcon){ if(favorites.includes(title)){favorites=favorites.filter(f=>f!==title); favIcon.innerHTML="🤍";} else{favorites.push(title); favIcon.innerHTML="❤️";} localStorage.setItem("favorites",JSON.stringify(favorites)); }
+    function addRating(container,title){ container.innerHTML=""; for(let i=1;i<=5;i++){ const star=document.createElement("span"); star.textContent="☆"; star.addEventListener("click",()=>{ saveRating(title,i); updateStars(container,i); filterRecipes(); }); container.appendChild(star); } updateStars(container,ratings[title]||0); }
+    function saveRating(title,value){ ratings[title]=value; ratingCounts[title] = (ratingCounts[title] || 0) + 1; localStorage.setItem("ratings",JSON.stringify(ratings)); localStorage.setItem("ratingCounts",JSON.stringify(ratingCounts)); }
+    function updateStars(container,value){ [...container.children].forEach((s,i)=>s.textContent=(i<value)?"⭐":"☆"); }
+    function addComment(index){ const r = recipes[index]; const input = document.getElementById(`commentInput${index}`); if(!input.value) return; if(!comments[r.title]) comments[r.title]=[]; comments[r.title].push(input.value); localStorage.setItem("comments", JSON.stringify(comments)); filterRecipes(); }
+
+    const modal=document.getElementById("recipeModal");
+    const modalTitle=document.getElementById("modalTitle");
+    const modalImage=document.getElementById("modalImage");
+    const modalIngredients=document.getElementById("modalIngredients");
+    const modalInstructions=document.getElementById("modalInstructions");
+    const closeBtn=document.querySelector(".close");
+    window.showRecipe=function(index){ const r=recipes[index]; modalTitle.innerText=r.title; modalImage.src=r.image; modalIngredients.innerHTML=r.extendedIngredients.map(i=>`<li>${i}</li>`).join(""); modalInstructions.innerHTML=r.instructions.map(i=>`<li>${i}</li>`).join(""); modal.style.display="block"; }
+    closeBtn.onclick=()=>modal.style.display="none";
+    window.onclick=e=>{if(e.target==modal)modal.style.display="none";};
+
+    function filterRecipes(){ const text=searchBar.value.toLowerCase(); const country=countrySelect.value,state=stateSelect.value,district=districtSelect.value,type=typeSelect.value; const filtered=recipes.filter(r=>{ const matchesSearch=r.title.toLowerCase().includes(text)||r.extendedIngredients.some(i=>i.toLowerCase().includes(text)); const matchesCountry=country?r.location.country===country:true; const matchesState=state?r.location.state===state:true; const matchesDist=district?r.location.district===district:true; const matchesType=(type==="All")?true:r.type===type; return matchesSearch && matchesCountry && matchesState && matchesDist && matchesType; }); displayRecipes(filtered); }
+
+    const recipeOptions=document.getElementById("recipeOptions");
+    recipes.forEach(r=>{ const o=document.createElement("option"); o.value=r.title; recipeOptions.appendChild(o); });
+    document.getElementById("showFavorites").addEventListener("click",()=>displayRecipes(recipes.filter(r=>favorites.includes(r.title))));
+    document.getElementById("showAll").addEventListener("click",()=>filterRecipes());
+
+    // Upload Modal JS
+    const uploadModal = document.getElementById("uploadModal");
+    const openUpload = document.getElementById("openUpload");
+    const closeUpload = uploadModal.querySelector(".close");
+    openUpload.onclick = () => uploadModal.style.display = "block";
+    closeUpload.onclick = () => uploadModal.style.display = "none";
+    window.onclick = (e) => { if(e.target == uploadModal) uploadModal.style.display = "none"; }
+
+    // Add User Recipe
+    function addUserRecipe(){
+      const title=document.getElementById("newTitle").value.trim();
+      const type=document.getElementById("newType").value.trim();
+      const country=document.getElementById("newCountry").value.trim();
+      const state=document.getElementById("newState").value.trim();
+      const district=document.getElementById("newDistrict").value.trim();
+      const image=document.getElementById("newImage").value.trim();
+      const ingredients=document.getElementById("newIngredients").value.split(",").map(i=>i.trim());
+      const instructions=document.getElementById("newInstructions").value.split(",").map(i=>i.trim());
+      if(!title || !type || !country || !state || !district) return alert("Please fill all fields!");
+      const newRecipe={ title,type, location:{country,state,district}, image, extendedIngredients:ingredients, instructions };
+      recipes.push(newRecipe);
+      localStorage.setItem("userRecipes", JSON.stringify(recipes.filter(r=>!defaultRecipes.includes(r))));
+      uploadModal.style.display="none";
+      filterRecipes();
+    }
+
+    // Initial display
+    filterRecipes();
+  </script>
+</body>
+</html>
